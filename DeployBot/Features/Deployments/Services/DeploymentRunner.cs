@@ -30,17 +30,9 @@ namespace DeployBot.Features.Deployments.Services
             try
             {
                 Directory.CreateDirectory(workingDirectory);
+                ExtractArchive(release, workingDirectory);
 
-                using (var zipArchive = new ZipArchive(File.OpenRead(Path.Combine(
-                    _serviceConfiguration.GetReleaseDropOffFolder(release.Product.Name, release.Version),
-                    "release.zip")), ZipArchiveMode.Read, false))
-                {
-                    zipArchive.ExtractToDirectory(workingDirectory);
-                }
-
-                var scriptPath = Path.Combine(_serviceConfiguration.DeploymentTemplatesFolder,
-                    $"{release.Product.Name}.ps1");
-                var scriptContents = await File.ReadAllTextAsync(scriptPath);
+                var scriptContents = await ReadScriptFromFile(release);
 
                 var parameters = new Dictionary<string, string>
                 {
@@ -70,6 +62,21 @@ namespace DeployBot.Features.Deployments.Services
                     Directory.Delete(workingDirectory, true);
                 }
             }
+        }
+
+        private async Task<string> ReadScriptFromFile(Release release)
+        {
+            var scriptPath = Path.Combine(_serviceConfiguration.DeploymentTemplatesFolder, $"{release.Product.Name}.ps1");
+            return await File.ReadAllTextAsync(scriptPath);
+        }
+
+        private void ExtractArchive(Release release, string workingDirectory)
+        {
+            using var zipArchive = new ZipArchive(File.OpenRead(Path.Combine(
+                _serviceConfiguration.GetReleaseDropOffFolder(release.Product.Name, release.Version),
+                "release.zip")), ZipArchiveMode.Read, false);
+
+            zipArchive.ExtractToDirectory(workingDirectory);
         }
     }
 }
