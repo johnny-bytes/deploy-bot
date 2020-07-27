@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Security;
 using Microsoft.Extensions.Configuration;
 
 namespace DeployBot.Features.Shared.Services
@@ -8,9 +9,25 @@ namespace DeployBot.Features.Shared.Services
         private const string ApiKeyConfigurationKey = "ApiKey";
         private const string DataFolderConfigurationKey = "AppDataFolder";
 
+        private const string DeploymentUserConfigurationKey = "DeploymentUser";
+        private const string DeploymentUserPasswordConfigurationKey = "DeploymentUserPassword";
+
         public ServiceConfiguration(IConfiguration configuration)
         {
             var appData = configuration.GetValue<string>(DataFolderConfigurationKey);
+
+            DeploymentUser = configuration.GetValue<string>(DeploymentUserConfigurationKey);
+            var password = configuration.GetValue<string>(DeploymentUserPasswordConfigurationKey);
+
+            if (!string.IsNullOrEmpty(password))
+            {
+                DeploymentUserPassword = new SecureString();
+
+                foreach (var character in password)
+                {
+                    DeploymentUserPassword.AppendChar(character);
+                }
+            }
 
             ReleaseDropOffFolder = Path.Combine(appData, "releases");
             DeploymentTemplatesFolder = Path.Combine(appData, "scripts");
@@ -22,12 +39,11 @@ namespace DeployBot.Features.Shared.Services
         }
 
         public string ConnectionString { get; }
-
         public string DeploymentTemplatesFolder { get; }
-
         public string ReleaseDropOffFolder { get; }
-
         public string ApiKey { get; }
+        public string DeploymentUser { get; }
+        public SecureString DeploymentUserPassword { get; }
 
         public string GetReleaseDropOffFolder(string product, string version)
         {

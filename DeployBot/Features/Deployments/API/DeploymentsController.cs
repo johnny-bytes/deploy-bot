@@ -16,13 +16,13 @@ namespace DeployBot.Features.Deployments.API
     public class DeploymentsController : ControllerBase
     {
         private readonly DeploymentService _deploymentService;
-        private readonly DeploymentRunner _deploymentRunner;
+        private readonly ReleaseDeploymentProcessor _releaseDeploymentProcessor;
         private readonly ReleaseService _releaseService;
 
-        public DeploymentsController(DeploymentService deploymentService, DeploymentRunner deploymentRunner, ReleaseService releaseService)
+        public DeploymentsController(DeploymentService deploymentService, ReleaseDeploymentProcessor releaseDeploymentProcessor, ReleaseService releaseService)
         {
             _deploymentService = deploymentService;
-            _deploymentRunner = deploymentRunner;
+            _releaseDeploymentProcessor = releaseDeploymentProcessor;
             _releaseService = releaseService;
         }
 
@@ -47,7 +47,7 @@ namespace DeployBot.Features.Deployments.API
                 return NotFound();
             }
 
-            var deployment = await _deploymentRunner.RunDeploymentForRelease(release);
+            var deployment = await _releaseDeploymentProcessor.RunAsync(release);
             return Ok(new DeploymentDto
             {
                 Version = deployment.Release.Version,

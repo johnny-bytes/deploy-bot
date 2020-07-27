@@ -37,7 +37,7 @@ namespace DeployBot
             services.AddSingleton<ServiceConfiguration>();
             services.AddScoped<ReleaseService>();
             services.AddScoped<DeploymentService>();
-            services.AddTransient<DeploymentRunner>();
+            services.AddTransient<ReleaseDeploymentProcessor>();
 
             services.AddTransient<HttpExceptionMiddleware>();
         }
