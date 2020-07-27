@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30204.135
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeployBot", "DeployBot\DeployBot.csproj", "{E1B297F3-8BA2-4421-AE5D-0E5CE86EEBFB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeployBot.Infrastructure", "DeployBot.Infrastructure\DeployBot.Infrastructure.csproj", "{753A2B91-EB84-4F18-A54B-EF14872A1B22}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E1B297F3-8BA2-4421-AE5D-0E5CE86EEBFB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E1B297F3-8BA2-4421-AE5D-0E5CE86EEBFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E1B297F3-8BA2-4421-AE5D-0E5CE86EEBFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E1B297F3-8BA2-4421-AE5D-0E5CE86EEBFB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{753A2B91-EB84-4F18-A54B-EF14872A1B22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{753A2B91-EB84-4F18-A54B-EF14872A1B22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{753A2B91-EB84-4F18-A54B-EF14872A1B22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{753A2B91-EB84-4F18-A54B-EF14872A1B22}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D36E1F6C-CDE1-4A19-A5EA-FA709CF18A5A}
+	EndGlobalSection
+EndGlobal
