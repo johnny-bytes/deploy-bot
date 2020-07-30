@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DeployBot.Infrastructure.Migrations
 {
     [DbContext(typeof(DeployBotDbContext))]
-    [Migration("20200727153527_Initial")]
+    [Migration("20200730172934_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -77,9 +77,6 @@ namespace DeployBot.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ProductId");
-
-                    b.HasIndex("Version")
-                        .IsUnique();
 
                     b.ToTable("Releases");
                 });

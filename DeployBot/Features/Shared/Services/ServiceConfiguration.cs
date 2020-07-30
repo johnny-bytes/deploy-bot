@@ -11,6 +11,7 @@ namespace DeployBot.Features.Shared.Services
 
         private const string DeploymentUserConfigurationKey = "DeploymentUser";
         private const string DeploymentUserPasswordConfigurationKey = "DeploymentUserPassword";
+        private const string DeploymentRunnerAppPathConfigurationKey = "DeployRunnerAppPath";
 
         public ServiceConfiguration(IConfiguration configuration)
         {
@@ -33,6 +34,8 @@ namespace DeployBot.Features.Shared.Services
             DeploymentTemplatesFolder = Path.Combine(appData, "scripts");
             ConnectionString = $"Data Source={Path.Combine(appData, "DeployBot.db")}";
 
+            DeploymentRunnerAppPath = configuration.GetValue<string>(DeploymentRunnerAppPathConfigurationKey);
+
             ApiKey = configuration.GetValue<string>(ApiKeyConfigurationKey);
             
             EnsureAppDataFolders();
@@ -43,6 +46,7 @@ namespace DeployBot.Features.Shared.Services
         public string ReleaseDropOffFolder { get; }
         public string ApiKey { get; }
         public string DeploymentUser { get; }
+        public string DeploymentRunnerAppPath { get; set; }
         public SecureString DeploymentUserPassword { get; }
 
         public string GetReleaseDropOffFolder(string product, string version)

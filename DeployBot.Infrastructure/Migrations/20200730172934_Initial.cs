@@ -88,12 +88,6 @@ namespace DeployBot.Infrastructure.Migrations
                 name: "IX_Releases_ProductId",
                 table: "Releases",
                 column: "ProductId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Releases_Version",
-                table: "Releases",
-                column: "Version",
-                unique: true);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

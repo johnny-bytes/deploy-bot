@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Management.Automation;
 using System.Threading.Tasks;
 using CommandLine;
@@ -65,6 +66,11 @@ namespace DeployBot.Runner
             ps.AddParameters(parameters);
 
             await ps.InvokeAsync();
+
+            if (ps.Streams.Error.Any())
+            {
+                throw new ScriptingException(ps.InvocationStateInfo.Reason, ps.Streams.Error);
+            }
         }
 
         private async Task ExtractArchive()

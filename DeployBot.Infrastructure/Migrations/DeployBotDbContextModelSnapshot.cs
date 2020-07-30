@@ -76,9 +76,6 @@ namespace DeployBot.Infrastructure.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.HasIndex("Version")
-                        .IsUnique();
-
                     b.ToTable("Releases");
                 });
 

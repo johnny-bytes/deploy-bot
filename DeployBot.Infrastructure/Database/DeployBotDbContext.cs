@@ -31,10 +31,7 @@ namespace DeployBot.Infrastructure.Database
                 entity.HasIndex(e => e.Name).IsUnique();
             });
 
-            modelBuilder.Entity<Release>(entity =>
-            {
-                entity.HasIndex(e => e.Version).IsUnique();
-            });
+            modelBuilder.Entity<Release>();
 
             modelBuilder.Entity<Deployment>()
                 .Property(x => x.Status)

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "DeployBot.Runner": {
+      "commandName": "Project",
+      "commandLineArgs": "-z C:\\temp\\deployBot\\releases\\management\\1.0.0.0\\release.zip -s C:\\temp\\deployBot\\scripts\\management.ps1 -d C:\\WINDOWS\\TEMP\\sctime1a.alw -v 1.0.0.0"
+    }
+  }
+}
