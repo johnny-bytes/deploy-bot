@@ -32,12 +32,12 @@ namespace DeployBot.Features.Shared.Services
 
             ReleaseDropOffFolder = Path.Combine(appData, "releases");
             DeploymentTemplatesFolder = Path.Combine(appData, "scripts");
-            ConnectionString = $"Data Source={Path.Combine(appData, "DeployBot.db")}";
+            ConnectionString = $"Filename={Path.Combine(appData, "DeployBot2.db")};Connection=shared";
 
             DeploymentRunnerAppPath = configuration.GetValue<string>(DeploymentRunnerAppPathConfigurationKey);
 
             ApiKey = configuration.GetValue<string>(ApiKeyConfigurationKey);
-            
+
             EnsureAppDataFolders();
         }
 

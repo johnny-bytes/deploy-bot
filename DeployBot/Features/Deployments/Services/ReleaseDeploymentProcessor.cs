@@ -2,41 +2,97 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
+using DeployBot.Features.Products.Services;
+using DeployBot.Features.Releases.Services;
+using DeployBot.Features.Shared.Extensions;
 using DeployBot.Features.Shared.Services;
 using DeployBot.Infrastructure.Database;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace DeployBot.Features.Deployments.Services
 {
-    public class ReleaseDeploymentProcessor
+    public class ReleaseDeploymentProcessor : IHostedService
     {
         private readonly ILogger<ReleaseDeploymentProcessor> _logger;
         private readonly ServiceConfiguration _serviceConfiguration;
-        private readonly DeploymentService _deploymentService;
+        private readonly IServiceProvider _services;
+        private bool _isRunning;
 
-        public ReleaseDeploymentProcessor(ILogger<ReleaseDeploymentProcessor> logger, ServiceConfiguration serviceConfiguration, DeploymentService deploymentService)
+        public ReleaseDeploymentProcessor(ILogger<ReleaseDeploymentProcessor> logger, ServiceConfiguration serviceConfiguration, IServiceProvider services)
         {
             _logger = logger;
             _serviceConfiguration = serviceConfiguration;
-            _deploymentService = deploymentService;
+            _services = services;
         }
 
-        public async Task<Deployment> RunAsync(Release release)
+        public Task StartAsync(CancellationToken cancellationToken)
         {
-            DeploymentStatus deploymentStatus;
+            _isRunning = true;
+            DeploymentLoop();
+
+            return Task.CompletedTask;
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            _isRunning = false;
+
+            return Task.CompletedTask;
+        }
+
+        private async void DeploymentLoop()
+        {
+            using (var scope = _services.CreateScope())
+            {
+                try
+                {
+                    await Task.Delay(5000);
+
+                    var deploymentService = scope.ServiceProvider.GetRequiredService<DeploymentService>();
+                    var releaseService = scope.ServiceProvider.GetRequiredService<ReleaseService>();
+                    var productService = scope.ServiceProvider.GetRequiredService<ProductService>();
+
+                    var enqueuedDeployment = deploymentService.GetNextEnqueuedDeployment();
+                    if (enqueuedDeployment != null)
+                    {
+                        await DeployAsync(enqueuedDeployment, deploymentService, releaseService, productService);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "An unexpected error occurred during the deployment loop");
+                }
+            }
+
+            if (_isRunning)
+            {
+                DeploymentLoop();
+            }
+
+        }
+
+        private async Task DeployAsync(Deployment deployment, DeploymentService deploymentService, ReleaseService releaseService, ProductService productService)
+        {
+            var deploymentStatus = DeploymentStatus.Success;
             var workingDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-            
+            var release = releaseService.GetReleaseById(deployment.ReleaseId);
+            var product = productService.GetById(release.ProductId);
+
             try
             {
+                deploymentService.UpdateStatus(deployment, DeploymentStatus.InProgress);
                 Directory.CreateDirectory(workingDirectory);
 
-                var releaseZipPath = Path.Combine(_serviceConfiguration.GetReleaseDropOffFolder(release.Product.Name, release.Version),
+                var releaseZipPath = Path.Combine(_serviceConfiguration.GetReleaseDropOffFolder(product.Name, release.Version),
                     "release.zip");
-                var scriptPath = Path.Combine(_serviceConfiguration.DeploymentTemplatesFolder, $"{release.Product.Name}.ps1");
-                
+                var scriptPath = Path.Combine(_serviceConfiguration.DeploymentTemplatesFolder, $"{product.Name}.ps1");
+
                 var arguments = new List<string> {
-                    "-z", releaseZipPath, 
+                    "-z", releaseZipPath,
                     "-s", scriptPath,
                     "-d", workingDirectory,
                     "-v", release.Version
@@ -54,20 +110,27 @@ namespace DeployBot.Features.Deployments.Services
                     }
                 };
 
-                process.Start(); 
-                process.WaitForExit();
-            
-                deploymentStatus = (DeploymentStatus)process.ExitCode;
+                process.Start();
+                await process.WaitForExitAsync();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An unexpected error has occurred while trying to execute deployment runner.");
                 deploymentStatus = DeploymentStatus.Failed;
             }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(workingDirectory, true);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "An unexpected error has occurred while trying to delete working directory.");
+                }
+            }
 
-            Directory.Delete(workingDirectory, true);
-
-            return await _deploymentService.CreateDeploymentForRelease(release, DateTime.Now, deploymentStatus);
+            deploymentService.UpdateStatus(deployment, deploymentStatus);
         }
     }
 }

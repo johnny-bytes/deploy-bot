@@ -2,43 +2,59 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DeployBot.Features.Products.Services;
 using DeployBot.Infrastructure.Database;
-using Microsoft.EntityFrameworkCore;
 
 namespace DeployBot.Features.Deployments.Services
 {
     public class DeploymentService
     {
-        private readonly DeployBotDbContext _dbContext;
+        private readonly LiteDbRepository<Deployment> _dbContext;
+        private readonly ProductService _productService;
 
-        public DeploymentService(DeployBotDbContext dbContext)
+        public DeploymentService(LiteDbRepository<Deployment> dbContext, ProductService productService)
         {
             _dbContext = dbContext;
+            _productService = productService;
         }
 
-        public async Task<IEnumerable<Deployment>> GetDeploymentsByProduct(string productName)
+        public IEnumerable<Deployment> GetDeploymentsByProduct(string productName)
         {
-            var product = await _dbContext.Products.FirstAsync(p => p.Name == productName);
+            var product = _productService.GetByName(productName);
 
-            return _dbContext.Deployments
-                .Include(d => d.Release)
-                .Where(d => d.ProductId == product.Id);
+            return _dbContext.Query()
+                .Where(d => d.ProductId == product.Id)
+                .ToList();
         }
 
-        public async Task<Deployment> CreateDeploymentForRelease(Release release, DateTime deployedOn, DeploymentStatus status)
+        public async Task<Deployment> EnqueueDeploymentForRelease(Release release)
         {
             var deployment = new Deployment
             {
-                Release = release,
-                Product = release.Product,
-                DeployedOn = deployedOn,
-                Status = status
+                ReleaseId = release.Id,
+                ProductId = release.ProductId,
+                StatusChangedOn = DateTime.UtcNow,
+                Status = DeploymentStatus.Enqueued
             };
 
-            await _dbContext.AddAsync(deployment);
-            await _dbContext.SaveChangesAsync();
+            _dbContext.AddOrUpdate(deployment);
 
             return deployment;
+        }
+
+        public Deployment UpdateStatus(Deployment deployment, DeploymentStatus status)
+        {
+            deployment.Status = status;
+            deployment.StatusChangedOn = DateTime.UtcNow;
+
+            return deployment;
+        }
+
+        public Deployment GetNextEnqueuedDeployment()
+        {
+            return _dbContext.Query()
+                .Where(d => d.Status == DeploymentStatus.Enqueued)
+                .FirstOrDefault();
         }
     }
 }

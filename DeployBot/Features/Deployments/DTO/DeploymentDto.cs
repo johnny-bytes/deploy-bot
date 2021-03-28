@@ -7,7 +7,7 @@ namespace DeployBot.Features.Deployments.DTO
     {
         public int Id { get; set; }
         public string Version { get; set; }
-        public DateTime DeployedOn { get; set; }
+        public DateTime StatusChangedOn { get; set; }
         public DeploymentStatus Status { get; set; }
     }
 }

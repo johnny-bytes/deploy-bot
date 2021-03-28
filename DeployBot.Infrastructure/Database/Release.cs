@@ -1,22 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using LiteDB;
 
 namespace DeployBot.Infrastructure.Database
 {
-    public class Release
+    public class Release : IEntity<Release>
     {
-        [Key]
-        public int Id { get; set; }
-
+        [BsonId]
+        public ObjectId Id { get; set; }
         public string Version { get; set; }
+        public ObjectId ProductId { get; set; }
 
-        [ForeignKey(nameof(Product))]
-        public int ProductId { get; set; }
-        public Product Product { get; set; }
-
-        [InverseProperty(nameof(Deployment.Release))]
-        public ICollection<Deployment> Releases { get; set; }
+        public void EnsureIndices(ILiteCollection<Release> collection)
+        {
+            collection.EnsureIndex(r => r.Version);
+        }
     }
 }
