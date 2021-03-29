@@ -5,9 +5,9 @@ namespace DeployBot.Features.Authentication
 {
     public static class AuthenticationBuilderExtensions
     {
-        public static AuthenticationBuilder AddApiKeyAuthentication(this AuthenticationBuilder authenticationBuilder, Action<ApiKeyAuthenticationOptions> options)
+        public static AuthenticationBuilder AddBasicAuthentication(this AuthenticationBuilder authenticationBuilder, Action<BasicAuthenticationOptions> options)
         {
-            return authenticationBuilder.AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(ApiKeyAuthenticationOptions.DefaultScheme, options);
+            return authenticationBuilder.AddScheme<BasicAuthenticationOptions, BasicAuthenticationHandler>(BasicAuthenticationOptions.DefaultScheme, options);
         }
     }
 }

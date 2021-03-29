@@ -2,42 +2,42 @@ using System.Collections.Generic;
 using DeployBot.Infrastructure.Database;
 using LiteDB;
 
-namespace DeployBot.Features.Products.Services
+namespace DeployBot.Features.Applications.Services
 {
     public class ProductService
     {
-        private readonly LiteDbRepository<Product> _dbContext;
+        private readonly LiteDbRepository<Applications> _dbContext;
 
-        public ProductService(LiteDbRepository<Product> dbContext)
+        public ProductService(LiteDbRepository<Applications> dbContext)
         {
             _dbContext = dbContext;
         }
 
-        public IEnumerable<Product> GetAll()
+        public IEnumerable<Applications> GetAll()
         {
             return _dbContext.GetAll();
         }
 
-        public Product GetById(ObjectId id)
+        public Applications GetById(ObjectId id)
         {
             return _dbContext.GetById(id);
         }
 
-        public Product GetByName(string productName)
+        public Applications GetByName(string productName)
         {
             return _dbContext.Query()
                 .Where(p => p.Name == productName)
                 .First();
         }
 
-        public Product GetByNameOrDefault(string productName)
+        public Applications GetByNameOrDefault(string productName)
         {
             return _dbContext.Query()
                 .Where(p => p.Name == productName)
                 .FirstOrDefault();
         }
 
-        public Product GetOrAddByName(string productName)
+        public Applications GetOrAddByName(string productName)
         {
             var product = GetByNameOrDefault(productName);
             if (product == null)
@@ -48,9 +48,9 @@ namespace DeployBot.Features.Products.Services
             return product;
         }
 
-        private Product AddProductWithName(string productName)
+        private Applications AddProductWithName(string productName)
         {
-            var product = new Product
+            var product = new Applications
             {
                 Name = productName
             };

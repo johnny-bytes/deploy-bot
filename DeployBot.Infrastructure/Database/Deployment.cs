@@ -11,6 +11,7 @@ namespace DeployBot.Infrastructure.Database
         public ObjectId ProductId { get; set; }
         public DateTime StatusChangedOn { get; set; }
         public DeploymentStatus Status { get; set; }
+        public string Version { get; set; }
 
         public void EnsureIndices(ILiteCollection<Deployment> collection)
         {

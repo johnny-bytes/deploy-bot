@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace DeployBot.Features.Releases.DTO
+namespace DeployBot.Features.Deployments.DTO
 {
-    public class CreateReleaseDto
+    public class CreateDeploymentDto
     {
         [FromForm(Name = "version")]
         public string Version { get; set; }

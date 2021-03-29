@@ -4,25 +4,23 @@ using System.Threading.Tasks;
 using DeployBot.Features.Authentication;
 using DeployBot.Features.Deployments.DTO;
 using DeployBot.Features.Deployments.Services;
-using DeployBot.Features.Releases.Services;
+using DeployBot.Infrastructure.Database;
 using LiteDB;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DeployBot.Features.Deployments.API
 {
-    [Authorize(AuthenticationSchemes = ApiKeyAuthenticationOptions.DefaultScheme)]
+    [Authorize(AuthenticationSchemes = BasicAuthenticationOptions.DefaultScheme)]
     [Route("api/deployments")]
     [ApiController]
     public class DeploymentsController : ControllerBase
     {
         private readonly DeploymentService _deploymentService;
-        private readonly ReleaseService _releaseService;
 
-        public DeploymentsController(DeploymentService deploymentService, ReleaseService releaseService)
+        public DeploymentsController(DeploymentService deploymentService)
         {
             _deploymentService = deploymentService;
-            _releaseService = releaseService;
         }
 
         [HttpGet("{productName}")]
@@ -34,20 +32,32 @@ namespace DeployBot.Features.Deployments.API
             {
                 StatusChangedOn = d.StatusChangedOn,
                 Status = d.Status,
-                Version = _releaseService.GetReleaseById(d.ReleaseId).Version
+                Version = d.Version
             }).ToList());
         }
 
-        [HttpPost("enqueue")]
-        public async Task<ActionResult> CreateDeployment([FromBody] EnqueueDeploymentDto dto)
+        [HttpPost("{productName}")]
+        public async Task<ActionResult<DeploymentDto>> CreateDeployment([FromRoute] string productName, [FromForm] CreateDeploymentDto creaeteReleaseDto)
         {
-            var release = _releaseService.GetReleaseByVersion(dto.Version);
-            if (release == null)
+            var deployment = await _deploymentService.CreateDeployment(productName, creaeteReleaseDto);
+
+            return Ok(new DeploymentDto
+            {
+                Id = deployment.Id.ToString(),
+                Version = deployment.Version
+            });
+        }
+
+        [HttpPost("enqueue")]
+        public IActionResult EnqueueDeployment([FromBody] EnqueueDeploymentDto dto)
+        {
+            var deployment = _deploymentService.GetById(dto.Id);
+            if (deployment == null)
             {
                 return NotFound();
             }
 
-            await _deploymentService.EnqueueDeploymentForRelease(release);
+            _deploymentService.UpdateStatus(deployment, DeploymentStatus.Enqueued);
 
             return Ok();
         }

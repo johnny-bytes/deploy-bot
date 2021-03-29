@@ -2,6 +2,6 @@
 {
     public class EnqueueDeploymentDto
     {
-        public string Version { get; set; }
+        public string Id { get; set; }
     }
 }

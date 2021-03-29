@@ -1,11 +1,10 @@
 using DeployBot.Features.Authentication;
 using DeployBot.Features.Deployments.Services;
-using DeployBot.Features.Products.Services;
-using DeployBot.Features.Releases.Services;
 using DeployBot.Features.Shared.Exceptions;
 using DeployBot.Features.Shared.Services;
 using DeployBot.Infrastructure.Database;
 using LiteDB;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
@@ -32,17 +31,22 @@ namespace DeployBot
             var config = new ServiceConfiguration(Configuration);
 
             services.AddControllers();
-            services.AddAuthentication(ApiKeyAuthenticationOptions.DefaultScheme)
-                .AddApiKeyAuthentication(opt => { });
+            services.AddAuthentication(BasicAuthenticationOptions.DefaultScheme)
+                .AddBasicAuthentication(opt => { });
+
+            services.AddAuthorization(options =>
+            {
+                options.FallbackPolicy = new AuthorizationPolicyBuilder(BasicAuthenticationOptions.DefaultScheme)
+                    .RequireAuthenticatedUser()
+                    .Build();
+            });
 
             services.AddSingleton<ServiceConfiguration>();
 
             services.AddScoped<LiteDatabase>(ctx => new LiteDatabase(ctx.GetRequiredService<ServiceConfiguration>().ConnectionString));
-            services.AddScoped<LiteDbRepository<Product>>();
-            services.AddScoped<LiteDbRepository<Release>>();
+            services.AddScoped<LiteDbRepository<Applications>>();
             services.AddScoped<LiteDbRepository<Deployment>>();
             services.AddScoped<ProductService>();
-            services.AddScoped<ReleaseService>();
             services.AddScoped<DeploymentService>();
 
             services.AddHostedService<ReleaseDeploymentProcessor>();

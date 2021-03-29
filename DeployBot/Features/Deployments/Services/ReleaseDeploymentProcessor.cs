@@ -4,9 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using DeployBot.Features.Products.Services;
-using DeployBot.Features.Releases.Services;
-using DeployBot.Features.Shared.Extensions;
+using DeployBot.Features.Applications.Services;
 using DeployBot.Features.Shared.Services;
 using DeployBot.Infrastructure.Database;
 using Microsoft.Extensions.DependencyInjection;
@@ -53,13 +51,12 @@ namespace DeployBot.Features.Deployments.Services
                     await Task.Delay(5000);
 
                     var deploymentService = scope.ServiceProvider.GetRequiredService<DeploymentService>();
-                    var releaseService = scope.ServiceProvider.GetRequiredService<ReleaseService>();
                     var productService = scope.ServiceProvider.GetRequiredService<ProductService>();
 
                     var enqueuedDeployment = deploymentService.GetNextEnqueuedDeployment();
                     if (enqueuedDeployment != null)
                     {
-                        await DeployAsync(enqueuedDeployment, deploymentService, releaseService, productService);
+                        await DeployAsync(enqueuedDeployment, deploymentService, productService);
                     }
                 }
                 catch (Exception ex)
@@ -75,19 +72,18 @@ namespace DeployBot.Features.Deployments.Services
 
         }
 
-        private async Task DeployAsync(Deployment deployment, DeploymentService deploymentService, ReleaseService releaseService, ProductService productService)
+        private async Task DeployAsync(Deployment deployment, DeploymentService deploymentService, ProductService productService)
         {
             var deploymentStatus = DeploymentStatus.Success;
             var workingDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-            var release = releaseService.GetReleaseById(deployment.ReleaseId);
-            var product = productService.GetById(release.ProductId);
+            var product = productService.GetById(deployment.ProductId);
 
             try
             {
                 deploymentService.UpdateStatus(deployment, DeploymentStatus.InProgress);
                 Directory.CreateDirectory(workingDirectory);
 
-                var releaseZipPath = Path.Combine(_serviceConfiguration.GetReleaseDropOffFolder(product.Name, release.Version),
+                var releaseZipPath = Path.Combine(_serviceConfiguration.GetReleaseDropOffFolder(product.Name, deployment.Version),
                     "release.zip");
                 var scriptPath = Path.Combine(_serviceConfiguration.DeploymentTemplatesFolder, $"{product.Name}.ps1");
 
@@ -95,7 +91,7 @@ namespace DeployBot.Features.Deployments.Services
                     "-z", releaseZipPath,
                     "-s", scriptPath,
                     "-d", workingDirectory,
-                    "-v", release.Version
+                    "-v", deployment.Version
                 };
 
                 var process = new Process

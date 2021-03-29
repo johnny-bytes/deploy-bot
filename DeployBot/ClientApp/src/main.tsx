@@ -37,7 +37,7 @@ const partialTheme: PartialTheme = {
 }
 
 const fetcher = async (input: RequestInfo, init: RequestInit, ...args: any[]) => {
-  const res = await fetch(input, { ...init, headers: { 'x-api-key': '1234' } })
+  const res = await fetch(input, init)
   return res.json()
 }
 

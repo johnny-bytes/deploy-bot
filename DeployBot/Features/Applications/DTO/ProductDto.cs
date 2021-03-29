@@ -1,4 +1,4 @@
-namespace DeployBot.Features.Products.DTO
+namespace DeployBot.Features.Applications.DTO
 {
     public class ProductDto
     {

@@ -6,7 +6,10 @@ namespace DeployBot.Features.Shared.Services
 {
     public class ServiceConfiguration
     {
-        private const string ApiKeyConfigurationKey = "ApiKey";
+        private const string BasicAuthenticationUserKey = "BasicUsername";
+        private const string BasicAuthenticationPasswordKey = "BasicPassword";
+        private const string BasicAuthenticationRealmKey = "BasicRealm";
+
         private const string DataFolderConfigurationKey = "AppDataFolder";
 
         private const string DeploymentUserConfigurationKey = "DeploymentUser";
@@ -36,7 +39,9 @@ namespace DeployBot.Features.Shared.Services
 
             DeploymentRunnerAppPath = configuration.GetValue<string>(DeploymentRunnerAppPathConfigurationKey);
 
-            ApiKey = configuration.GetValue<string>(ApiKeyConfigurationKey);
+            BasicUsername = configuration.GetValue<string>(BasicAuthenticationUserKey);
+            BasicPassword = configuration.GetValue<string>(BasicAuthenticationPasswordKey);
+            BasicRealm = configuration.GetValue<string>(BasicAuthenticationUserKey);
 
             EnsureAppDataFolders();
         }
@@ -44,7 +49,9 @@ namespace DeployBot.Features.Shared.Services
         public string ConnectionString { get; }
         public string DeploymentTemplatesFolder { get; }
         public string ReleaseDropOffFolder { get; }
-        public string ApiKey { get; }
+        public string BasicRealm { get; set; }
+        public string BasicUsername { get; }
+        public string BasicPassword { get; }
         public string DeploymentUser { get; }
         public string DeploymentRunnerAppPath { get; set; }
         public SecureString DeploymentUserPassword { get; }

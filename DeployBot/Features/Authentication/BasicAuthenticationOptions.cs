@@ -2,9 +2,9 @@
 
 namespace DeployBot.Features.Authentication
 {
-    public class ApiKeyAuthenticationOptions : AuthenticationSchemeOptions
+    public class BasicAuthenticationOptions : AuthenticationSchemeOptions
     {
-        public const string DefaultScheme = "API-Key";
+        public const string DefaultScheme = "Basic";
         public string Scheme => DefaultScheme;
         public string AuthenticationType = DefaultScheme;
     }

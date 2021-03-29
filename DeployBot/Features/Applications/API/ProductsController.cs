@@ -1,15 +1,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using DeployBot.Features.Authentication;
-using DeployBot.Features.Products.DTO;
-using DeployBot.Features.Products.Services;
+using DeployBot.Features.Applications.DTO;
+using DeployBot.Features.Applications.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace DeployBot.Features.Products.API
+namespace DeployBot.Features.Applications.API
 {
 
-    [Authorize(AuthenticationSchemes = ApiKeyAuthenticationOptions.DefaultScheme)]
+    [Authorize(AuthenticationSchemes = BasicAuthenticationOptions.DefaultScheme)]
     [Route("api/products")]
     [ApiController]
     public class ProductsController : ControllerBase
