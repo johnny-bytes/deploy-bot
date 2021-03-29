@@ -1,8 +1,9 @@
-using DeployBot.Features.Authentication;
+using DeployBot.Authentication;
+using DeployBot.Features.Applications.Services;
 using DeployBot.Features.Deployments.Services;
 using DeployBot.Features.Shared.Exceptions;
-using DeployBot.Features.Shared.Services;
 using DeployBot.Infrastructure.Database;
+using DeployBot.Shared.Configuration;
 using LiteDB;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.IO;
@@ -44,10 +46,13 @@ namespace DeployBot
             services.AddSingleton<ServiceConfiguration>();
 
             services.AddScoped<LiteDatabase>(ctx => new LiteDatabase(ctx.GetRequiredService<ServiceConfiguration>().ConnectionString));
-            services.AddScoped<LiteDbRepository<Applications>>();
+            services.AddScoped<LiteDbRepository<Application>>();
             services.AddScoped<LiteDbRepository<Deployment>>();
-            services.AddScoped<ProductService>();
+            services.AddScoped<LiteDbRepository<DeploymentLogEntry>>();
+
+            services.AddScoped<ApplicationService>();
             services.AddScoped<DeploymentService>();
+            services.AddScoped<DeploymentLogService>();
 
             services.AddHostedService<ReleaseDeploymentProcessor>();
 
@@ -80,16 +85,16 @@ namespace DeployBot
                 endpoints.MapControllers();
             });
 
-            if (env.IsDevelopment())
-            {
-                app.UseSpa(spa =>
-                {
-                    spa.Options.SourcePath = Path.Combine("ClientApp");
-                    spa.Options.DevServerPort = 3000;
+            // if (env.IsDevelopment())
+            // {
+            //     app.UseSpa(spa =>
+            //     {
+            //         spa.Options.SourcePath = Path.Combine("ClientApp");
+            //         spa.Options.DevServerPort = 3000;
 
-                    spa.UseReactDevelopmentServer("dev");
-                });
-            }
+            //         spa.UseReactDevelopmentServer("dev");
+            //     });
+            // }
         }
     }
 }

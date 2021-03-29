@@ -3,4 +3,5 @@ export enum DeploymentStatus {
   failed = 1,
   inProgress = 2,
   enqueued = 3,
+  pending = 4,
 }

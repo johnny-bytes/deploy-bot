@@ -5,6 +5,7 @@ namespace DeployBot.Infrastructure.Database
         Success = 0,
         Failed = 1,
         InProgress = 2,
-        Enqueued = 3
+        Enqueued = 3,
+        Pending = 4
     }
 }

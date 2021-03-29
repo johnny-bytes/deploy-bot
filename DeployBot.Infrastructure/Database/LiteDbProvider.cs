@@ -33,6 +33,16 @@ namespace DeployBot.Infrastructure.Database
             entity.EnsureIndices(Collection);
         }
 
+        public bool Remove(TEntity entity)
+        {
+            return Collection.Delete(entity.Id);
+        }
+
+        public int RemoveAll(System.Linq.Expressions.Expression<System.Func<TEntity, bool>> predicate)
+        {
+            return Collection.DeleteMany(predicate);
+        }
+
         private ILiteCollection<TEntity> Collection => _liteDb.GetCollection<TEntity>();
     }
 }

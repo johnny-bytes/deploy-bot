@@ -7,15 +7,14 @@ namespace DeployBot.Infrastructure.Database
     {
         [BsonId]
         public ObjectId Id { get; set; }
-        public ObjectId ReleaseId { get; set; }
-        public ObjectId ProductId { get; set; }
+        public ObjectId ApplicationId { get; set; }
         public DateTime StatusChangedOn { get; set; }
         public DeploymentStatus Status { get; set; }
         public string Version { get; set; }
 
         public void EnsureIndices(ILiteCollection<Deployment> collection)
         {
-
+            collection.EnsureIndex(d => d.ApplicationId);
         }
     }
 }

@@ -1,3 +1,4 @@
-export interface Product {
+export interface Application {
+  id: string
   name: string
 }

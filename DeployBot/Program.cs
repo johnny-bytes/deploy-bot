@@ -17,7 +17,6 @@ namespace DeployBot
                     webBuilder
                         .UseIISIntegration()
                         .UseStartup<Startup>();
-
                 });
     }
 }
