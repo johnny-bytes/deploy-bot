@@ -6,6 +6,7 @@ namespace DeployBot.Shared.Configuration
 {
     public class ServiceConfiguration
     {
+        private readonly IConfiguration _configuration;
         private const string BasicAuthenticationUserKey = "BasicUsername";
         private const string BasicAuthenticationPasswordKey = "BasicPassword";
         private const string BasicAuthenticationRealmKey = "BasicRealm";
@@ -13,6 +14,7 @@ namespace DeployBot.Shared.Configuration
         private const string DataFolderConfigurationKey = "AppDataFolder";
 
         private const string DeploymentUserConfigurationKey = "DeploymentUser";
+        private const string DeploymentUserDomainConfigurationKey = "DeploymentUserDomain";
         private const string DeploymentUserPasswordConfigurationKey = "DeploymentUserPassword";
         private const string DeploymentRunnerAppPathConfigurationKey = "DeployRunnerAppPath";
 
@@ -21,17 +23,7 @@ namespace DeployBot.Shared.Configuration
             var appData = configuration.GetValue<string>(DataFolderConfigurationKey);
 
             DeploymentUser = configuration.GetValue<string>(DeploymentUserConfigurationKey);
-            var password = configuration.GetValue<string>(DeploymentUserPasswordConfigurationKey);
-
-            if (!string.IsNullOrEmpty(password))
-            {
-                DeploymentUserPassword = new SecureString();
-
-                foreach (var character in password)
-                {
-                    DeploymentUserPassword.AppendChar(character);
-                }
-            }
+            DeploymentUserDomain = configuration.GetValue<string>(DeploymentUserDomainConfigurationKey);
 
             DeploymentDropOffFolder = Path.Combine(appData, "deployments");
             DeploymentTemplatesFolder = Path.Combine(appData, "scripts");
@@ -44,6 +36,7 @@ namespace DeployBot.Shared.Configuration
             BasicRealm = configuration.GetValue<string>(BasicAuthenticationUserKey);
 
             EnsureAppDataFolders();
+            _configuration = configuration;
         }
 
         public string ConnectionString { get; }
@@ -53,8 +46,9 @@ namespace DeployBot.Shared.Configuration
         public string BasicUsername { get; }
         public string BasicPassword { get; }
         public string DeploymentUser { get; }
+        public string DeploymentUserDomain { get; }
         public string DeploymentRunnerAppPath { get; set; }
-        public SecureString DeploymentUserPassword { get; }
+        public string DeploymentUserPassword => _configuration.GetValue<string>(DeploymentUserPasswordConfigurationKey);
 
         public string GetDeploymentDropOffFolder(string applicationName, string version)
         {

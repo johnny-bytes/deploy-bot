@@ -85,16 +85,16 @@ namespace DeployBot
                 endpoints.MapControllers();
             });
 
-            // if (env.IsDevelopment())
-            // {
-            //     app.UseSpa(spa =>
-            //     {
-            //         spa.Options.SourcePath = Path.Combine("ClientApp");
-            //         spa.Options.DevServerPort = 3000;
+            if (env.IsDevelopment())
+            {
+                app.UseSpa(spa =>
+                {
+                    spa.Options.SourcePath = Path.Combine("ClientApp");
+                    spa.Options.DevServerPort = 3000;
 
-            //         spa.UseReactDevelopmentServer("dev");
-            //     });
-            // }
+                    spa.UseReactDevelopmentServer("dev");
+                });
+            }
         }
     }
 }

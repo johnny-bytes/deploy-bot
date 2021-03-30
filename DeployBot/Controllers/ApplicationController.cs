@@ -74,14 +74,13 @@ namespace DeployBot.Controllers
         [HttpPost("{applicationId}/deployments")]
         public async Task<ActionResult<DeploymentDto>> CreateDeployment([FromRoute] string applicationId, [FromForm] CreateDeploymentDto createDeploymentDto)
         {
-            ObjectId applicationObjectId = new ObjectId(applicationId);
-            var application = _applicationService.GetById(applicationObjectId);
+            var application = _applicationService.GetByNameOrId(applicationId);
             if (application == null)
             {
                 return BadRequest("Application was not found.");
             }
 
-            if (_deploymentService.CheckVersionExists(applicationObjectId, createDeploymentDto.Version))
+            if (_deploymentService.CheckVersionExists(application.Id, createDeploymentDto.Version))
             {
                 return BadRequest("Version already exists.");
             }
@@ -99,8 +98,7 @@ namespace DeployBot.Controllers
         [HttpDelete("{applicationId}/deployments/{deploymentId}")]
         public ActionResult DeleteDeployment([FromRoute] string applicationId, [FromRoute] string deploymentId)
         {
-            ObjectId applicationObjectId = new ObjectId(applicationId);
-            var application = _applicationService.GetById(applicationObjectId);
+            var application = _applicationService.GetByNameOrId(applicationId);
             if (application == null)
             {
                 return BadRequest("Application was not found.");
@@ -112,17 +110,33 @@ namespace DeployBot.Controllers
                 return NotFound();
             }
 
+            if (deployment.Status == DeploymentStatus.InProgress || deployment.Status == DeploymentStatus.Enqueued)
+            {
+                return BadRequest("Deployment is currently enqueued or running.");
+            }
+
             _deploymentService.DeleteDeployment(deployment);
             return Ok();
         }
 
         [HttpPost("{applicationId}/deployments/{deploymentId}/enqueue")]
-        public IActionResult EnqueueDeployment([FromRoute] string deploymentId)
+        public IActionResult EnqueueDeployment([FromRoute] string applicationId, [FromRoute] string deploymentId)
         {
+            var application = _applicationService.GetByNameOrId(applicationId);
+            if (application == null)
+            {
+                return BadRequest("Application was not found.");
+            }
+
             var deployment = _deploymentService.GetById(new ObjectId(deploymentId));
             if (deployment == null)
             {
                 return BadRequest("Deployment was not found.");
+            }
+
+            if (deployment.Status == DeploymentStatus.InProgress)
+            {
+                return Ok();
             }
 
             _deploymentService.UpdateStatus(deployment, DeploymentStatus.Enqueued);
@@ -133,8 +147,7 @@ namespace DeployBot.Controllers
         [HttpGet("{applicationId}/deployments/{deploymentId}/logs")]
         public ActionResult<IEnumerable<DeploymentLogEntry>> GetLogs([FromRoute] string applicationId, [FromRoute] string deploymentId)
         {
-            ObjectId applicationObjectId = new ObjectId(applicationId);
-            var application = _applicationService.GetById(applicationObjectId);
+            var application = _applicationService.GetByNameOrId(applicationId);
             if (application == null)
             {
                 return BadRequest("Application was not found.");
@@ -153,8 +166,7 @@ namespace DeployBot.Controllers
         [HttpDelete("{applicationId}/deployments/{deploymentId}/logs")]
         public ActionResult<IEnumerable<DeploymentLogEntry>> ClearLogs([FromRoute] string applicationId, [FromRoute] string deploymentId)
         {
-            ObjectId applicationObjectId = new ObjectId(applicationId);
-            var application = _applicationService.GetById(applicationObjectId);
+            var application = _applicationService.GetByNameOrId(applicationId);
             if (application == null)
             {
                 return BadRequest("Application was not found.");

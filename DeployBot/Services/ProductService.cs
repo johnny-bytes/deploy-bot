@@ -18,9 +18,14 @@ namespace DeployBot.Features.Applications.Services
             return _dbContext.GetAll();
         }
 
-        public Application GetById(ObjectId id)
+        public Application GetByNameOrId(string applicationNameOrId)
         {
-            return _dbContext.GetById(id);
+            return GetByNameOrDefault(applicationNameOrId) ?? GetById(new ObjectId(applicationNameOrId));
+        }
+
+        public Application GetById(ObjectId applicationNameOrId)
+        {
+            return _dbContext.GetById(new ObjectId(applicationNameOrId));
         }
 
         public Application GetByNameOrDefault(string applicationName)

@@ -17,10 +17,10 @@ namespace DeployBot.Runner
         {
             [Option('z', "zip", Required = true, HelpText = "Path to the release.zip file.")]
             public string DeploymentZipPath { get; set; }
+
             [Option('s', "script", Required = true, HelpText = "Path to the powershell script.")]
             public string ScriptPath { get; set; }
-            [Option('d', "cwd", Required = true, HelpText = "Path to the working directory.")]
-            public string WorkingDirectory { get; set; }
+
             [Option('v', "version", Required = true, HelpText = "The version that is deployed.")]
             public string DeploymentVersion { get; set; }
         }
@@ -37,11 +37,17 @@ namespace DeployBot.Runner
         public async Task<DeploymentStatus> RunDeploymentForRelease()
         {
             _logger.Information("Beginning deployment...");
+            string workingDirectory = null;
 
             try
             {
-                await ExtractArchive();
-                await ExecutePowerShellScript();
+                workingDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                _logger.Information("Creating working directory. Path: {0}", workingDirectory);
+
+                Directory.CreateDirectory(workingDirectory);
+
+                await ExtractArchive(workingDirectory);
+                await ExecutePowerShellScript(workingDirectory);
 
                 _logger.Information("Deployment completed successfully.");
                 return DeploymentStatus.Success;
@@ -52,17 +58,31 @@ namespace DeployBot.Runner
                 _logger.Information("Deployment failed.");
                 return DeploymentStatus.Failed;
             }
+            finally
+            {
+                try
+                {
+                    if (!string.IsNullOrEmpty(workingDirectory))
+                    {
+                        Directory.Delete(workingDirectory, true);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warning(ex, "An unexpected error occurred while trying to clean up working directory.");
+                }
+            }
         }
 
-        private async Task ExecutePowerShellScript()
+        private async Task ExecutePowerShellScript(string workingDirectory)
         {
             _logger.Information("Executing powershell script {0}.", _options.ScriptPath);
             var scriptContents = await File.ReadAllTextAsync(_options.ScriptPath);
 
-            _logger.Debug("Setting parameters. DeploymentFolder: {0}; Version: {1}.", _options.WorkingDirectory, _options.DeploymentVersion);
+            _logger.Debug("Setting parameters. DeploymentFolder: {0}; Version: {1}.", workingDirectory, _options.DeploymentVersion);
             var parameters = new Dictionary<string, string>
             {
-                {"DeploymentFolder", _options.WorkingDirectory},
+                {"DeploymentFolder", workingDirectory},
                 {"Version", _options.DeploymentVersion}
             };
 
@@ -81,13 +101,13 @@ namespace DeployBot.Runner
             }
         }
 
-        private async Task ExtractArchive()
+        private async Task ExtractArchive(string workingDirectory)
         {
-            _logger.Information("Extracting archive from {0} to {1}.", _options.DeploymentZipPath, _options.WorkingDirectory);
+            _logger.Information("Extracting archive from {0} to {1}.", _options.DeploymentZipPath, workingDirectory);
             var releaseFileStream = File.OpenRead(_options.DeploymentZipPath);
 
             using var zipArchive = new ZipArchive(releaseFileStream, ZipArchiveMode.Read, false);
-            await Task.Run(() => zipArchive.ExtractToDirectory(_options.WorkingDirectory));
+            await Task.Run(() => zipArchive.ExtractToDirectory(workingDirectory));
             _logger.Information("Extracting archive completed.");
         }
     }

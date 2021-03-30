@@ -74,10 +74,9 @@ namespace DeployBot.Features.Deployments.Services
         }
 
         private async Task DeployAsync(Deployment deployment, DeploymentService deploymentService,
-        ApplicationService applicationService, DeploymentLogService deploymentLogService)
+            ApplicationService applicationService, DeploymentLogService deploymentLogService)
         {
             var deploymentStatus = DeploymentStatus.Success;
-            var workingDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             var product = applicationService.GetById(deployment.ApplicationId);
 
             StringBuilder stringBuilder = new StringBuilder();
@@ -87,29 +86,47 @@ namespace DeployBot.Features.Deployments.Services
             try
             {
                 deploymentService.UpdateStatus(deployment, DeploymentStatus.InProgress);
-                Directory.CreateDirectory(workingDirectory);
 
                 var releaseZipPath = Path.Combine(_serviceConfiguration.GetDeploymentDropOffFolder(product.Name, deployment.Version),
                     "release.zip");
                 var scriptPath = Path.Combine(_serviceConfiguration.DeploymentTemplatesFolder, $"{product.Name}.ps1");
 
+                stringBuilder.AppendLine("Arguments:");
+                stringBuilder.AppendLine($"Zip path: {releaseZipPath}");
+                stringBuilder.AppendLine($"Script path: {scriptPath}");
+                stringBuilder.AppendLine($"Version: {deployment.Version}");
+
                 var arguments = new List<string> {
                     "-z", releaseZipPath,
                     "-s", scriptPath,
-                    "-d", workingDirectory,
                     "-v", deployment.Version
                 };
 
+                var startInfo = new ProcessStartInfo
+                {
+                    UseShellExecute = false,
+                    FileName = _serviceConfiguration.DeploymentRunnerAppPath,
+                    Arguments = string.Join(' ', arguments),
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                };
+
+                if (!string.IsNullOrEmpty(_serviceConfiguration.DeploymentUser))
+                {
+                    startInfo.Domain = _serviceConfiguration.DeploymentUserDomain;
+                    startInfo.UserName = _serviceConfiguration.DeploymentUser;
+
+                    if (_serviceConfiguration.DeploymentUserPassword != null)
+                    {
+                        startInfo.PasswordInClearText = _serviceConfiguration.DeploymentUserPassword;
+                    }
+
+                    _logger.LogInformation("user {0}, Pass: {1}", startInfo.UserName, startInfo.PasswordInClearText);
+                }
+
                 var process = new Process
                 {
-                    StartInfo =
-                    {
-                        UseShellExecute = false,
-                        FileName = _serviceConfiguration.DeploymentRunnerAppPath,
-                        Arguments = string.Join(' ', arguments),
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true
-                    }
+                    StartInfo = startInfo
                 };
 
                 process.Start();
@@ -145,20 +162,6 @@ namespace DeployBot.Features.Deployments.Services
 
                 _logger.LogError(ex, "An unexpected error has occurred while trying to execute deployment runner.");
                 deploymentStatus = DeploymentStatus.Failed;
-            }
-            finally
-            {
-                try
-                {
-                    Directory.Delete(workingDirectory, true);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "An unexpected error has occurred while trying to delete working directory.");
-                    stringBuilder.AppendLine("An unexpected error has occurred while trying to delete working directory. Exception:");
-                    stringBuilder.AppendLine(ex.Message);
-                    stringBuilder.AppendLine();
-                }
             }
 
             stringBuilder.AppendLine("-----END DEPLOYMENT-----");
