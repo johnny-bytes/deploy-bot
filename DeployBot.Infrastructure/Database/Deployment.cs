@@ -1,31 +1,20 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Dynamic;
+using LiteDB;
 
 namespace DeployBot.Infrastructure.Database
 {
-    public class Deployment
+    public class Deployment : IEntity<Deployment>
     {
-        [Key]
-        public int Id { get; set; }
-
-        [ForeignKey(nameof(Product))]
-        public int ProductId { get; set; }
-        public Product Product { get; set; }
-
-        [ForeignKey(nameof(Release))]
-        public int ReleaseId { get; set; }
-        public Release Release { get; set; }
-
-        public DateTime DeployedOn { get; set; }
-
+        [BsonId]
+        public ObjectId Id { get; set; }
+        public ObjectId ApplicationId { get; set; }
+        public DateTime StatusChangedOn { get; set; }
         public DeploymentStatus Status { get; set; }
-    }
+        public string Version { get; set; }
 
-    public enum DeploymentStatus
-    {
-        Success = 0,
-        Failed = 1
+        public void EnsureIndices(ILiteCollection<Deployment> collection)
+        {
+            collection.EnsureIndex(d => d.ApplicationId);
+        }
     }
 }

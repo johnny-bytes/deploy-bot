@@ -1,16 +1,20 @@
-using DeployBot.Features.Authentication;
+using DeployBot.Authentication;
+using DeployBot.Features.Applications.Services;
 using DeployBot.Features.Deployments.Services;
-using DeployBot.Features.Releases.Services;
 using DeployBot.Features.Shared.Exceptions;
-using DeployBot.Features.Shared.Services;
 using DeployBot.Infrastructure.Database;
+using DeployBot.Shared.Configuration;
+using LiteDB;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.IO;
 
 namespace DeployBot
 {
@@ -29,16 +33,28 @@ namespace DeployBot
             var config = new ServiceConfiguration(Configuration);
 
             services.AddControllers();
-            services.AddDbContext<DeployBotDbContext>(opts =>
+            services.AddAuthentication(BasicAuthenticationOptions.DefaultScheme)
+                .AddBasicAuthentication(opt => { });
+
+            services.AddAuthorization(options =>
             {
-                opts.UseSqlite(config.ConnectionString);
+                options.FallbackPolicy = new AuthorizationPolicyBuilder(BasicAuthenticationOptions.DefaultScheme)
+                    .RequireAuthenticatedUser()
+                    .Build();
             });
-            services.AddAuthentication(ApiKeyAuthenticationOptions.DefaultScheme).AddApiKeyAuthentication(opt => {});
 
             services.AddSingleton<ServiceConfiguration>();
-            services.AddScoped<ReleaseService>();
+
+            services.AddScoped<LiteDatabase>(ctx => new LiteDatabase(ctx.GetRequiredService<ServiceConfiguration>().ConnectionString));
+            services.AddScoped<LiteDbRepository<Application>>();
+            services.AddScoped<LiteDbRepository<Deployment>>();
+            services.AddScoped<LiteDbRepository<DeploymentLogEntry>>();
+
+            services.AddScoped<ApplicationService>();
             services.AddScoped<DeploymentService>();
-            services.AddTransient<ReleaseDeploymentProcessor>();
+            services.AddScoped<DeploymentLogService>();
+
+            services.AddHostedService<ReleaseDeploymentProcessor>();
 
             services.AddTransient<HttpExceptionMiddleware>();
         }
@@ -46,7 +62,7 @@ namespace DeployBot
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
-            loggerFactory.AddFile("Logs\\{Date}.txt");
+            loggerFactory.AddFile(Path.Combine("Logs", "{Date}.txt"));
 
             if (env.IsDevelopment())
             {
@@ -61,22 +77,24 @@ namespace DeployBot
 
             app.UseMiddleware<HttpExceptionMiddleware>();
 
+            app.UseDefaultFiles();
+            app.UseStaticFiles();
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
             });
 
-            UpdateDatabase(app);
-        }
+            if (env.IsDevelopment())
+            {
+                app.UseSpa(spa =>
+                {
+                    spa.Options.SourcePath = Path.Combine("ClientApp");
+                    spa.Options.DevServerPort = 3000;
 
-        private static void UpdateDatabase(IApplicationBuilder app)
-        {
-            using var serviceScope = app.ApplicationServices
-                .GetRequiredService<IServiceScopeFactory>()
-                .CreateScope();
-
-            using var context = serviceScope.ServiceProvider.GetService<DeployBotDbContext>();
-            context.Database.Migrate();
+                    spa.UseReactDevelopmentServer("dev");
+                });
+            }
         }
     }
 }

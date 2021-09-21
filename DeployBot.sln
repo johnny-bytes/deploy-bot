@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeployBot", "DeployBot\Depl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeployBot.Infrastructure", "DeployBot.Infrastructure\DeployBot.Infrastructure.csproj", "{753A2B91-EB84-4F18-A54B-EF14872A1B22}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeployBot.Runner", "DeployBot.Runner\DeployBot.Runner.csproj", "{2F9095BF-9528-4346-ACF4-EB502C3FA8F0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeployBot.Runner", "DeployBot.Runner\DeployBot.Runner.csproj", "{2F9095BF-9528-4346-ACF4-EB502C3FA8F0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
